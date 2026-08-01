@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f8fb;
+  --foreground: #111827;
+  --brand: #0f766e;
+  --brand-secondary: #14b8a6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 34rem),
+    var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.brand-bg {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.brand-text {
+  color: var(--brand);
+}
+
+.brand-soft {
+  background: color-mix(in srgb, var(--brand) 12%, white);
+  color: var(--brand);
+}
+
+.brand-button {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.brand-button:hover {
+  background: color-mix(in srgb, var(--brand) 88%, black);
+}
+
+.brand-field:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 16%, transparent);
+}
+
+.language-switcher select {
+  min-width: 7.25rem;
+  max-width: 10rem;
+}
+
+.language-switcher {
+  box-shadow: none;
+}
+
+.language-switcher option {
+  background: #ffffff;
+  color: #111827;
+}
+
+@media (max-width: 480px) {
+  .language-switcher {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .language-switcher select {
+    min-width: 5.75rem;
+    max-width: 7rem;
+  }
+}
