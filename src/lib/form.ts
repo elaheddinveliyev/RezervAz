@@ -60,3 +60,31 @@ export function redirectWithToast(path: string, params: Record<string, string>) 
 
   return `${url.pathname}?${url.searchParams.toString()}`;
 }
+
+// Sanitize user input to prevent XSS
+// Removes HTML tags and escapes special characters
+export function sanitizeInput(input: string): string {
+  if (typeof input !== "string") return "";
+  return input
+    .replace(/[<>]/g, (char) => (char === "<" ? "<" : ">"))
+    .replace(/javascript:/gi, "")
+    .replace(/on\w+\s*=/gi, "")
+    .trim();
+}
+
+// Validate phone number in E.164 format (+[country code][number])
+export function validatePhoneE164(phone: string): boolean {
+  // E.164 format: + followed by 1-15 digits
+  const e164Regex = /^\+[1-9]\d{1,14}$/;
+  return e164Regex.test(phone);
+}
+
+// Normalize phone to E.164 format (adds + if missing, removes spaces)
+export function normalizePhoneE164(phone: string): string {
+  const cleaned = phone.replace(/[\s\-\(\)]/g, "");
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.startsWith("00")) return "+" + cleaned.slice(2);
+  // Assume Azerbaijan if no country code (for local numbers)
+  if (cleaned.startsWith("994")) return "+" + cleaned;
+  return "+" + cleaned;
+}

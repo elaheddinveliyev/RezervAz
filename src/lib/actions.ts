@@ -37,6 +37,9 @@ import {
   redirectWithToast,
   statusValue,
   textValue,
+  validatePhoneE164,
+  sanitizeInput,
+  normalizePhoneE164,
   weekDayValues,
 } from "@/lib/form";
 import { todayISO } from "@/lib/time";
@@ -334,11 +337,14 @@ export async function deleteServiceAction(formData: FormData) {
 export async function createCustomerAction(formData: FormData) {
   try {
     await requireAdmin();
+    const rawPhone = textValue(formData, "phone");
+    const phone = validatePhoneE164(rawPhone) ? rawPhone : normalizePhoneE164(rawPhone);
+    
     await createCustomer({
       fullName: requireText(textValue(formData, "fullName"), "Full name"),
-      phone: requireText(textValue(formData, "phone"), "Phone"),
+      phone: requireText(phone, "Phone"),
       email: textValue(formData, "email"),
-      notes: textValue(formData, "notes"),
+      notes: sanitizeInput(textValue(formData, "notes")),
     });
     revalidateApp();
   } catch (error) {
@@ -353,11 +359,14 @@ export async function updateCustomerAction(formData: FormData) {
 
   try {
     await requireAdmin();
+    const rawPhone = textValue(formData, "phone");
+    const phone = validatePhoneE164(rawPhone) ? rawPhone : normalizePhoneE164(rawPhone);
+    
     await updateCustomer(id, {
       fullName: requireText(textValue(formData, "fullName"), "Full name"),
-      phone: requireText(textValue(formData, "phone"), "Phone"),
+      phone: requireText(phone, "Phone"),
       email: textValue(formData, "email"),
-      notes: textValue(formData, "notes"),
+      notes: sanitizeInput(textValue(formData, "notes")),
     });
     revalidateApp();
   } catch (error) {
@@ -433,9 +442,12 @@ export async function deleteReservationAction(formData: FormData) {
 
 export async function publicBookingAction(formData: FormData) {
   try {
+    const rawPhone = textValue(formData, "phone");
+    const phone = validatePhoneE164(rawPhone) ? rawPhone : normalizePhoneE164(rawPhone);
+    
     const customer = await createCustomer({
       fullName: requireText(textValue(formData, "fullName"), "Full name"),
-      phone: requireText(textValue(formData, "phone"), "Phone number"),
+      phone: requireText(phone, "Phone number"),
       email: textValue(formData, "email"),
       notes: "",
     });
@@ -450,7 +462,7 @@ export async function publicBookingAction(formData: FormData) {
       date: requireFutureDate(textValue(formData, "date")),
       startTime: requireText(textValue(formData, "startTime"), "Start time"),
       status: "pending",
-      notes: `Public booking request • ${modeLabel}`,
+      notes: `Public booking request \u2022 ${modeLabel}`,
       source: "public",
       durationMinutes: Number(textValue(formData, "durationMinutes")) || undefined,
     });
