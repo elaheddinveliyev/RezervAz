@@ -61,15 +61,20 @@ export function redirectWithToast(path: string, params: Record<string, string>) 
   return `${url.pathname}?${url.searchParams.toString()}`;
 }
 
-// Sanitize user input to prevent XSS
-// Removes HTML tags and escapes special characters
+// Escape HTML entities to prevent XSS
+const HTML_ESCAPE_MAP: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#x27;",
+  "/": "&#x2F;",
+};
+
 export function sanitizeInput(input: string): string {
   if (typeof input !== "string") return "";
   return input
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/javascript:/gi, "")
-    .replace(/on\w+\s*=/gi, "")
+    .replace(/[&<>"'/]/g, (char) => HTML_ESCAPE_MAP[char] || char)
     .trim();
 }
 
