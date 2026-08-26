@@ -134,6 +134,8 @@ export type DashboardStats = {
   staffCount: number;
   serviceCount: number;
   customerCount: number;
+  totalEstimatedRevenue: number;
+  todayEstimatedRevenue: number;
 };
 
 export const defaultBusinessSettings: BusinessSettings = {

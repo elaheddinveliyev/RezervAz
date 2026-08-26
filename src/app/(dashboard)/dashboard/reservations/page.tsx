@@ -171,6 +171,7 @@ export default async function ReservationsPage({
                     <StatusBadge status={reservation.status} />
                     <WhatsAppCopyButton
                       message={createWhatsAppReminder(reservation, business)}
+                      phone={reservation.customer?.phone}
                     />
                   </div>
                 </div>

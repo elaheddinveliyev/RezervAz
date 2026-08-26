@@ -1,4 +1,4 @@
-﻿import { cookies } from "next/headers";
+import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/auth";
 import {
   addDemoReservationEndTime,
@@ -823,6 +823,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   ]);
 
   const today = todayISO();
+  const servicePriceMap = new Map(services.map((s) => [s.id, s.price]));
+
+  const activeReservations = reservations.filter(
+    (item) => item.status === "confirmed" || item.status === "completed",
+  );
+
+  const totalEstimatedRevenue = activeReservations.reduce((sum, res) => {
+    return sum + (servicePriceMap.get(res.serviceId) ?? 0);
+  }, 0);
+
+  const todayEstimatedRevenue = activeReservations
+    .filter((res) => res.date === today)
+    .reduce((sum, res) => {
+      return sum + (servicePriceMap.get(res.serviceId) ?? 0);
+    }, 0);
 
   return {
     todayReservations: reservations.filter((item) => item.date === today).length,
@@ -841,6 +856,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     staffCount: staff.length,
     serviceCount: services.length,
     customerCount: customers.length,
+    totalEstimatedRevenue,
+    todayEstimatedRevenue,
   };
 }
 

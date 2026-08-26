@@ -5,15 +5,17 @@ import {
   Clock3,
   ContactRound,
   Stethoscope,
+  TrendingUp,
   UserRoundCheck,
   UsersRound,
+  Wallet,
   XCircle,
 } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard-card";
 import { StatusBadge } from "@/components/status-badge";
 import { getBusinessSettings, getDashboardStats, listReservations } from "@/lib/data";
 import { getCurrentUser } from "@/lib/auth";
-import { formatDate, formatTime, todayISO } from "@/lib/time";
+import { formatCurrency, formatDate, formatTime, todayISO } from "@/lib/time";
 import { businessTypeLabels } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -31,6 +33,20 @@ export default async function DashboardPage() {
         ? `${formatDate(todayISO())} schedule`
         : "No appointments scheduled today",
       icon: CalendarClock,
+      tone: "teal" as const,
+    },
+    {
+      title: "Today's Est. Revenue",
+      value: formatCurrency(stats.todayEstimatedRevenue),
+      detail: "Confirmed bookings today",
+      icon: Wallet,
+      tone: "teal" as const,
+    },
+    {
+      title: "Total Est. Revenue",
+      value: formatCurrency(stats.totalEstimatedRevenue),
+      detail: "Active & completed bookings",
+      icon: TrendingUp,
       tone: "teal" as const,
     },
     {
