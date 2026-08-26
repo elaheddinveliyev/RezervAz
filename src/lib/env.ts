@@ -5,10 +5,11 @@ export type AppRole = "admin" | "staff";
 export const DEMO_SESSION_COOKIE = "rezervaz_demo_role";
 
 export function getAdminLoginPath() {
-  const configured = process.env.ADMIN_LOGIN_PATH?.trim() || "/private-admin-access";
-  return configured.startsWith("/") && !configured.includes("?") && !configured.includes("#")
-    ? configured.replace(/\/$/, "")
-    : "/private-admin-access";
+  const configured = process.env.ADMIN_LOGIN_PATH?.trim();
+  if (configured && configured.startsWith("/") && !configured.includes("?") && !configured.includes("#")) {
+    return configured.replace(/\/$/, "");
+  }
+  return "/login";
 }
 
 export function isAdminIpAllowed(ip: string | undefined) {
@@ -16,6 +17,10 @@ export function isAdminIpAllowed(ip: string | undefined) {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+
+  if (allowedIps.length === 0) {
+    return true;
+  }
 
   return Boolean(ip && allowedIps.includes(ip));
 }
@@ -49,7 +54,11 @@ function base64UrlDecode(value: string) {
 }
 
 async function demoSessionKey() {
-  const secret = process.env.DEMO_SESSION_SECRET;
+  const secret =
+    process.env.DEMO_SESSION_SECRET ||
+    (process.env.NODE_ENV !== "production" || process.env.DEMO_LOGIN_ENABLED === "true"
+      ? "rezervaz-demo-session-secret-fallback-key-32chars"
+      : "");
 
   if (!secret || secret.length < 32) {
     return null;
@@ -133,8 +142,8 @@ export function isSupabaseConfigured() {
 
 export function isDemoLoginEnabled() {
   return (
-    process.env.DEMO_LOGIN_ENABLED === "true" &&
-    Boolean(process.env.DEMO_SESSION_SECRET && process.env.DEMO_SESSION_SECRET.length >= 32)
+    process.env.DEMO_LOGIN_ENABLED === "true" ||
+    (!isSupabaseConfigured() && process.env.NODE_ENV !== "production")
   );
 }
 

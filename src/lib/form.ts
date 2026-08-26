@@ -66,7 +66,8 @@ export function redirectWithToast(path: string, params: Record<string, string>) 
 export function sanitizeInput(input: string): string {
   if (typeof input !== "string") return "";
   return input
-    .replace(/[<>]/g, (char) => (char === "<" ? "<" : ">"))
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
     .replace(/javascript:/gi, "")
     .replace(/on\w+\s*=/gi, "")
     .trim();

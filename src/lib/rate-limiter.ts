@@ -36,6 +36,15 @@ export function createRateLimiter(config: RateLimitConfig) {
     const key = getClientKey(request, config.keyPrefix);
     const now = Date.now();
     
+    // Inline periodic cleanup of stale entries if map gets large
+    if (rateLimitStore.size > 500) {
+      for (const [k, e] of rateLimitStore.entries()) {
+        if (now > e.resetTime) {
+          rateLimitStore.delete(k);
+        }
+      }
+    }
+    
     const entry = rateLimitStore.get(key);
     
     if (!entry || now > entry.resetTime) {
@@ -71,29 +80,19 @@ export function createRateLimiter(config: RateLimitConfig) {
 
 // Pre-configured rate limiters
 export const bookingRateLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  maxRequests: 10, // 10 bookings per hour per IP
+  windowMs: 60 * 1000, // 1 minute window
+  maxRequests: 120, // 120 requests per minute per IP for browsing /book
   keyPrefix: "booking",
 });
 
 export const authRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 5, // 5 login attempts per 15 min
+  maxRequests: 20, // 20 login attempts per 15 min
   keyPrefix: "auth",
 });
 
 export const apiRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: 30, // 30 requests per minute
+  maxRequests: 60, // 60 requests per minute
   keyPrefix: "api",
 });
-
-// Cleanup old entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 5 * 60 * 1000); // Clean every 5 minutes

@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { CalendarCheck, ShieldCheck } from "lucide-react";
 import { SignInButton } from "@/components/sign-in-button";
 import { signInAction, signInDemoAction } from "@/lib/actions";
@@ -145,6 +144,7 @@ export async function LoginPageContent({ searchParams }: LoginPageProps) {
   );
 }
 
-export default function LoginPage() {
-  redirect("/book");
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  return <LoginPageContent searchParams={searchParams} />;
 }
+
