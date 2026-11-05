@@ -8,6 +8,10 @@ import {
   applyDemoPreset,
   createCustomer,
   createReservation,
+  getBusinessSettings,
+  listReservationBlocks,
+  listServices,
+  listStaff,
   createService,
   createStaff,
   deleteCustomer,
@@ -42,7 +46,7 @@ import {
   normalizePhoneE164,
   weekDayValues,
 } from "@/lib/form";
-import { todayISO } from "@/lib/time";
+import { generateSlotAvailability, todayISO, timeToMinutes } from "@/lib/time";
 import { getCurrentUser } from "@/lib/auth";
 
 function safeNextPath(value: FormDataEntryValue | null) {
@@ -172,6 +176,12 @@ function requireText(value: string, label: string) {
 function requireFutureDate(value: string) {
   requireText(value, "Date");
 
+  const validDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(value);
+  const parsed = new Date(value + "T12:00:00Z");
+  if (!validDate || Number.isNaN(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10) !== value) {
+    throw new Error("Invalid reservation date.");
+  }
   if (value < todayISO()) {
     throw new Error("Date cannot be in the past.");
   }
@@ -452,29 +462,56 @@ export async function deleteReservationAction(formData: FormData) {
 
 export async function publicBookingAction(formData: FormData) {
   try {
+    const date = requireFutureDate(textValue(formData, "date"));
+    const staffId = requireText(textValue(formData, "staffId"), "Staff");
+    const serviceId = requireText(textValue(formData, "serviceId"), "Service");
+    const startTime = requireText(textValue(formData, "startTime"), "Start time");
+    const durationMinutes = Number(textValue(formData, "durationMinutes"));
+
+    if (!/^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(startTime) ||
+        !Number.isInteger(durationMinutes) ||
+        durationMinutes < 60 || durationMinutes > 480 ||
+        durationMinutes % 60 !== 0 ||
+        timeToMinutes(startTime) + durationMinutes > 1440) {
+      throw new Error("Invalid booking time or duration.");
+    }
+
+    const [business, staff, services] = await Promise.all([
+      getBusinessSettings(), listStaff(true), listServices(true),
+    ]);
+    const provider = staff.find((item) => item.id === staffId);
+    const service = services.find((item) => item.id === serviceId);
+    if (!provider || !service) {
+      throw new Error("The selected staff member or service is unavailable.");
+    }
+
+    const reservations = await listReservationBlocks({ date, staffId });
+    const allowed = generateSlotAvailability({
+      business, date, durationMinutes, reservations, service, staff: provider,
+    }).some((slot) => slot.isAvailable && slot.startTime === startTime);
+    if (!allowed) {
+      throw new Error("This time is not available. Please select another slot.");
+    }
+
     const rawPhone = textValue(formData, "phone");
     const phone = validatePhoneE164(rawPhone) ? rawPhone : normalizePhoneE164(rawPhone);
-    
+    if (!validatePhoneE164(phone)) {
+      throw new Error("Enter a valid international phone number.");
+    }
+
     const customer = await createCustomer({
       fullName: requireText(textValue(formData, "fullName"), "Full name"),
-      phone: requireText(phone, "Phone number"),
+      phone,
       email: textValue(formData, "email"),
       notes: "",
     });
 
-    const roomMode = textValue(formData, "roomMode");
-    const modeLabel = roomMode === "ps5" ? "PS5 room" : "Standard room";
-
+    const isPs5 = service.name.toLowerCase().includes("ps5");
     await createReservation({
       customerId: customer.id,
-      staffId: requireText(textValue(formData, "staffId"), "Staff"),
-      serviceId: requireText(textValue(formData, "serviceId"), "Service"),
-      date: requireFutureDate(textValue(formData, "date")),
-      startTime: requireText(textValue(formData, "startTime"), "Start time"),
-      status: "pending",
-      notes: `Public booking request \u2022 ${modeLabel}`,
-      source: "public",
-      durationMinutes: Number(textValue(formData, "durationMinutes")) || undefined,
+      staffId, serviceId, date, startTime, status: "pending",
+      notes: isPs5 ? "Public booking request • PS5 room" : "Public booking request • Standard room",
+      source: "public", durationMinutes,
     });
     revalidateApp();
   } catch (error) {
