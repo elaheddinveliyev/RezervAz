@@ -18,7 +18,15 @@ const dayIndexToKey: WeekDay[] = [
 ];
 
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  // Local calendar date for businesses operating in Azerbaijan.
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Baku",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
 export function formatDate(date: string) {
@@ -189,6 +197,8 @@ export function generateSlotAvailability({
   });
 
   for (let current = start; current + normalizedDurationMinutes <= end; current += 30) {
+    // Until DB stores end datetimes, reject slots that cross midnight.
+    if (current >= 1440 || current + normalizedDurationMinutes > 1440) continue;
     const startTime = minutesToTime(current);
     const endTime = minutesToTime(current + normalizedDurationMinutes);
     const isTaken = reservationsForDay.some((reservation) => {
