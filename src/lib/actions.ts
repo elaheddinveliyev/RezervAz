@@ -187,6 +187,13 @@ async function requireAdmin() {
   }
 }
 
+async function requireReservationManager() {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "admin" && user.role !== "staff")) {
+    throw new Error("Sign in to manage reservations.");
+  }
+}
+
 export async function saveBusinessSettingsAction(formData: FormData) {
   try {
     await requireAdmin();
@@ -390,6 +397,7 @@ export async function deleteCustomerAction(formData: FormData) {
 
 export async function createReservationAction(formData: FormData) {
   try {
+    await requireReservationManager();
     await createReservation({
       customerId: requireText(textValue(formData, "customerId"), "Customer"),
       staffId: requireText(textValue(formData, "staffId"), "Staff"),
@@ -412,6 +420,7 @@ export async function updateReservationAction(formData: FormData) {
   const id = textValue(formData, "id");
 
   try {
+    await requireReservationManager();
     await updateReservation(id, {
       customerId: requireText(textValue(formData, "customerId"), "Customer"),
       staffId: requireText(textValue(formData, "staffId"), "Staff"),
@@ -431,6 +440,7 @@ export async function updateReservationAction(formData: FormData) {
 
 export async function deleteReservationAction(formData: FormData) {
   try {
+    await requireReservationManager();
     await deleteReservation(textValue(formData, "id"));
     revalidateApp();
   } catch (error) {
