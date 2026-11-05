@@ -9,7 +9,7 @@ import {
 } from "@/lib/demo-store";
 import {
   DEMO_SESSION_COOKIE,
-  isAppRole,
+  verifyDemoSession,
   isDemoDataEnabled,
   isDemoLoginEnabled,
   isSupabaseConfigured,
@@ -132,7 +132,7 @@ async function shouldUseDemoData() {
   }
 
   const cookieStore = await cookies();
-  return isAppRole(cookieStore.get(DEMO_SESSION_COOKIE)?.value);
+  return Boolean(await verifyDemoSession(cookieStore.get(DEMO_SESSION_COOKIE)?.value));
 }
 
 function normalizeTime(value: string | null | undefined, fallback: string) {
