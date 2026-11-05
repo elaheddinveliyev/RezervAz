@@ -56,7 +56,7 @@ function base64UrlDecode(value: string) {
 async function demoSessionKey() {
   const secret =
     process.env.DEMO_SESSION_SECRET ||
-    (process.env.NODE_ENV !== "production" || process.env.DEMO_LOGIN_ENABLED === "true"
+    (process.env.NODE_ENV !== "production"
       ? "rezervaz-demo-session-secret-fallback-key-32chars"
       : "");
 
@@ -141,10 +141,9 @@ export function isSupabaseConfigured() {
 }
 
 export function isDemoLoginEnabled() {
-  return (
-    process.env.DEMO_LOGIN_ENABLED === "true" ||
-    (!isSupabaseConfigured() && process.env.NODE_ENV !== "production")
-  );
+  // Demo sessions must never be accepted in production.
+  return process.env.NODE_ENV !== "production" &&
+    (process.env.DEMO_LOGIN_ENABLED === "true" || !isSupabaseConfigured());
 }
 
 export function isDemoDataEnabled() {
