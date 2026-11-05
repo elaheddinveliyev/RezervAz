@@ -14,7 +14,7 @@ import {
   isDemoLoginEnabled,
   isSupabaseConfigured,
 } from "@/lib/env";
-import { addMinutesToTime, overlaps, todayISO } from "@/lib/time";
+import { addMinutesToTime, overlaps, todayISO, timeToMinutes } from "@/lib/time";
 import {
   type BusinessSettings,
   type BusinessType,
@@ -701,11 +701,19 @@ export async function hasStaffConflict({
 export async function createReservation(input: ReservationInput) {
   const service = (await listServices()).find((item) => item.id === input.serviceId);
 
-  if (!service) {
-    throw new Error("Service was not found.");
+  if (!service || !service.active) {
+    throw new Error("An active service is required.");
   }
-
+  const staff = (await listStaff(true)).find((member) => member.id === input.staffId);
+  if (!staff) {
+    throw new Error("An active staff member is required.");
+  }
   const requestedDurationMinutes = input.durationMinutes ?? service.durationMinutes;
+  if (!Number.isInteger(requestedDurationMinutes) || requestedDurationMinutes <= 0 ||
+      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input.startTime) ||
+      timeToMinutes(input.startTime) + requestedDurationMinutes > 1440) {
+    throw new Error("Invalid reservation time or duration.");
+  }
   const endTime = addMinutesToTime(input.startTime, requestedDurationMinutes);
   const hasConflict = await hasStaffConflict({
     date: input.date,
@@ -759,8 +767,12 @@ export async function updateReservation(
   if (!service) {
     throw new Error("Service was not found.");
   }
-
   const requestedDurationMinutes = input.durationMinutes ?? service.durationMinutes;
+  if (!Number.isInteger(requestedDurationMinutes) || requestedDurationMinutes <= 0 ||
+      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input.startTime) ||
+      timeToMinutes(input.startTime) + requestedDurationMinutes > 1440) {
+    throw new Error("Invalid reservation time or duration.");
+  }
   const endTime = addMinutesToTime(input.startTime, requestedDurationMinutes);
   const hasConflict = await hasStaffConflict({
     date: input.date,
