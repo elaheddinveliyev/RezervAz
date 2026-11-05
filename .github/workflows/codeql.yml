@@ -42,7 +42,7 @@ jobs:
 
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild
+        uses: github/codeql-action/autobuild@v4
 
 
       - name: CodeQL Analysis
