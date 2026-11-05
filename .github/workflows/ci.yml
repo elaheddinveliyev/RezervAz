@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -27,6 +27,9 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+
+      - name: Run booking validation tests
+        run: npm test
 
       - name: Build project
         run: npm run build
