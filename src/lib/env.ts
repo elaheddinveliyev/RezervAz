@@ -147,7 +147,8 @@ export function isDemoLoginEnabled() {
 }
 
 export function isDemoDataEnabled() {
-  return process.env.DEMO_DATA_ENABLED === "true";
+  // Production must use persistent data, not mutable in-memory demo records.
+  return process.env.NODE_ENV !== "production" && process.env.DEMO_DATA_ENABLED === "true";
 }
 
 export function getDefaultDemoPreset(): DemoPreset {
