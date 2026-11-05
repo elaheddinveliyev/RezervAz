@@ -51,13 +51,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
     const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
                      request.headers.get("x-real-ip") ||
-                     "127.0.0.1";
+                     (process.env.NODE_ENV === "production" ? undefined : "127.0.0.1");
     
     if (!isAdminIpAllowed(clientIp)) {
-      // Log unauthorized access attempt
-      console.warn(`[SECURITY] Admin access denied from IP: ${clientIp} for path: ${pathname}`);
-      // In production, you could redirect to a 403 page
-      // return NextResponse.redirect(new URL("/403", request.url));
+      console.warn(`[SECURITY] Admin access denied for path: ${pathname}`);
+      return new NextResponse("Forbidden", { status: 403 });
     }
   }
 
