@@ -15,6 +15,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/env";
 import { addMinutesToTime, overlaps, todayISO, timeToMinutes } from "@/lib/time";
+import { isValidStartTime } from "@/lib/booking-validation";
 import {
   type BusinessSettings,
   type BusinessType,
@@ -710,7 +711,7 @@ export async function createReservation(input: ReservationInput) {
   }
   const requestedDurationMinutes = input.durationMinutes ?? service.durationMinutes;
   if (!Number.isInteger(requestedDurationMinutes) || requestedDurationMinutes <= 0 ||
-      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input.startTime) ||
+      !isValidStartTime(input.startTime) ||
       timeToMinutes(input.startTime) + requestedDurationMinutes > 1440) {
     throw new Error("Invalid reservation time or duration.");
   }
@@ -769,7 +770,7 @@ export async function updateReservation(
   }
   const requestedDurationMinutes = input.durationMinutes ?? service.durationMinutes;
   if (!Number.isInteger(requestedDurationMinutes) || requestedDurationMinutes <= 0 ||
-      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input.startTime) ||
+      !isValidStartTime(input.startTime) ||
       timeToMinutes(input.startTime) + requestedDurationMinutes > 1440) {
     throw new Error("Invalid reservation time or duration.");
   }
