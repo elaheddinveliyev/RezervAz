@@ -13,7 +13,6 @@ import { getPublicBookingTheme } from "@/lib/client-theme";
 import {
   getBusinessSettings,
   listReservationBlocks,
-  listReservations,
   listServices,
   listStaff,
 } from "@/lib/data";
@@ -101,13 +100,14 @@ export default async function PublicBookingPage({
         })
       : [];
   const weekDates = selectedStaff ? getWeekDates(selectedDate) : [];
+  // Anonymous visitors may read sanitized blocks, not private reservation rows.
   const weekReservations =
     selectedStaff && weekDates.length
-      ? await listReservations({
-          from: weekDates[0],
-          to: weekDates[weekDates.length - 1],
-          staffId: selectedStaff.id,
-        })
+      ? (await Promise.all(
+          weekDates.map((date) =>
+            listReservationBlocks({ date, staffId: selectedStaff.id }),
+          ),
+        )).flat()
       : [];
   const slotAvailability =
     selectedService && selectedStaff
