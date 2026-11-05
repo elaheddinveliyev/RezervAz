@@ -176,7 +176,7 @@ function requireText(value: string, label: string) {
 function requireFutureDate(value: string) {
   requireText(value, "Date");
 
-  const validDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(value);
+  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(value);
   const parsed = new Date(value + "T12:00:00Z");
   if (!validDate || Number.isNaN(parsed.getTime()) ||
       parsed.toISOString().slice(0, 10) !== value) {
@@ -468,7 +468,7 @@ export async function publicBookingAction(formData: FormData) {
     const startTime = requireText(textValue(formData, "startTime"), "Start time");
     const durationMinutes = Number(textValue(formData, "durationMinutes"));
 
-    if (!/^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(startTime) ||
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(startTime) ||
         !Number.isInteger(durationMinutes) ||
         durationMinutes < 60 || durationMinutes > 480 ||
         durationMinutes % 60 !== 0 ||
